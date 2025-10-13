@@ -97,7 +97,7 @@ WORKERS="10" TASK_PROBABILITY_FAILED="100" go run cmd/main.go > out.txt
 ## Testing and monitoring
 ### High load testing 
 ```bash
-./tests/bashtests/high_load_test.sh # Sending 100 parallel requests
+sh ./tests/bashtests/high_load_test.sh --host=localhost --port=8080 --requests-numbers=100 # Sending 100 parallel requests
 ```
 ### Task status check
 ```bash
@@ -129,8 +129,22 @@ cat out.txt | grep "failed" | wc -l # Failed tasks
 ```bash
 echo "Total tasks processed: $(cat out.txt | wc -l)"
 ```
-## Deploy with kubernetes
-### Build application in docker container
+## Deploy with Minikube
+### Minikube installation
+You can use this script for install Minikube and necessary dependences
 ```bash
-docker build -t worker-pool:latest -f ./deploy/Dockerfile .
+sh ./deploy/minikube_install.sh
+```
+To deploy the application, you need to build thr Docker image and load it into minikube. The `run.sh` script will do this automatically
+```bash
+sh ./deploy/run.sh
+```
+### Check application pods
+Monitor pod states in real-time and check their count
+```sh
+watch -n 1 "echo '=== PODS ==='; kubectl get pods -l app=worker-pool; echo ''; echo '=== HPA ==='; kubectl get hpa"
+```
+If you want to observe pods scaling, use command above and simultaneously run high-load test
+```bash
+sh ./tests/bashtests/high_load_test.sh --host=<node-ip> --port=30080 --requests-numbers=200
 ```
