@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker-pool-service
+spec:
+  selector:
+    app: worker-pool
+  ports:
+  - protocol: TCP
+    port: 8080        # Service port inside the cluster
+    targetPort: 8080  # The containter port
+    nodePort: 30080   # External access port on nodes
+  type: NodePort      # Service type for the external access

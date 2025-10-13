@@ -69,7 +69,7 @@ func (wp *WorkerPool) Run() {
 		for inputTask := range wp.TaskQueue {
 			// Если все воркеры заняты, мы заблокируемся до освобождения хотя бы одного
 			wp.WorckerLocker <- struct{}{}
-			log.Printf("<worckerpool.go> received the task from the queue, ID=%v", inputTask.ID)
+			//log.Printf("<worckerpool.go> received the task from the queue, ID=%v", inputTask.ID)
 			// запуск логики процесса обработки задачи
 			wp.taskProcess(inputTask)
 		}
@@ -90,6 +90,9 @@ func (wp *WorkerPool) taskProcess(task *Task) {
 		defer func() {
 			<-wp.WorckerLocker
 		}()
+		// По завершению удаляем задачу из списка обрабатываемых задач
+		defer wp.taskStateManager.RemoveTask(task)
+		// Выполнение задачи
 		task.Execute(resultChan)
 	}()
 
@@ -105,7 +108,7 @@ func (wp *WorkerPool) taskProcess(task *Task) {
 				// Проверка количества повторов
 				if task.CurrentRetries >= task.MaxRetries {
 					// Повторов слишком много, на повтор не отправляем
-					log.Printf("<worckerpool.go> task with ID=%s reties overflow (reties = %d), task will be ignore", task.ID, task.CurrentRetries)
+					//log.Printf("<worckerpool.go> task with ID=%s reties overflow (reties = %d), task will be ignore", task.ID, task.CurrentRetries)
 					// Запись в стандартный вывод для аккумуляции проваленых задач в файл (go run main.go > fail.txt)
 					if val, err := strconv.Atoi(task.ID); err == nil {
 						fmt.Printf("task with ID=%04d failed\n", val)
@@ -118,7 +121,7 @@ func (wp *WorkerPool) taskProcess(task *Task) {
 				// Добавляем джиттер (разброс от -500 до +500 мс ко времени задержки)
 				x += time.Duration(rand.Intn(1000)-500) * time.Millisecond
 				// Ждем заданное время и добавляем задачу обратно в очередь
-				log.Printf("<worckerpool.go> task with ID=%s will be returned in queue after %d ms", task.ID, x)
+				//log.Printf("<worckerpool.go> task with ID=%s will be returned in queue after %d ms", task.ID, x)
 				time.Sleep(time.Duration(x))
 				wp.AddTastToQueue(task)
 			}

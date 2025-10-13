@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-pool
+spec:
+  replicas: 1 # Initial number of replicas
+  selector:
+    matchLabels:
+      app: worker-pool
+  template:
+    metadata:
+      labels:
+        app: worker-pool
+    spec:
+      containers:
+      - name: worker-pool             # Container name in the pod
+        image: worker-pool:latest     # Name of the app's docker-image 
+        imagePullPolicy: IfNotPresent # Use the local image if available
+        ports:
+        - containerPort: 8080
+        env:            # Environments variables
+        - name: WORKERS
+          value: "4"
+        - name: QUEUE_SIZE
+          value: "64"
+        - name: TASK_WORK_IMITATION_DURATION
+          value: "500"
+        readinessProbe: # Readiness check for traffic acceptance
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 7
+        livenessProbe:  # Container liveness check
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 9
+        resources:
+          requests:
+            cpu: "100m"     # Guaranteed 0.1 CPU
+            memory: "128Mi" # Guaranteed 128 MB memory
+          limits:
+            cpu: "500m"     # Maximum 0.5 CPU  
+            memory: "512Mi" # Maximum 512 MB memory
+      terminationGracePeriodSeconds: 80

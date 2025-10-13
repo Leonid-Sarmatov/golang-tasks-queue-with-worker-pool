@@ -17,6 +17,9 @@ func main() {
 	TaskProbabilityFailedEnvRead()
 	TaskWorkImitationEnvRead()
 
+	// Создание контроллера для взаимодействия с kubernetes
+	ka := core.NewKubernetesAdapter()
+
 	// Создание менеджера состояний задач
 	tsm := core.NewTaskStateManager()
 
@@ -26,7 +29,10 @@ func main() {
 
 	// Запуск сервера
 	myServer := server.NewServer()
-	myServer.Init(tsm, wp)
+	myServer.Init(tsm, wp, ka)
+
+	// Сигнал для kubernetes о готовности
+	ka.SetStateReadyOK()
 
 	// Создаем канал с сигналом об остановки сервиса
 	osSignalsChan := make(chan os.Signal, 1)
@@ -35,6 +41,9 @@ func main() {
 	// Ждем сигнал об остановке
 	<-osSignalsChan
 	log.Printf("A SIGINT or SIGTERM signal is received, and the application will be stopped...")
+
+	// Сигнал для kubernetes о скором отклбчении приложения и остановка воркеров
+	ka.SetStateNotReady()
 	wp.Stop()
 }
 

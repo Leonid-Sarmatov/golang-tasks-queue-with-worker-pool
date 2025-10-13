@@ -1,0 +1,36 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker-pool-scaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker-pool
+  # Autoscaling speed settings
+  cooldownPeriod: 10     # Seconds between scaling changes
+  pollingInterval: 5     # Seconds between metrics checks
+  # Autoscaling limits 
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+  - type: metrics-api    # Use custom metrics
+    metadata:
+      targetValue: "1"   # Target metric value per pod (queue load)
+      url: "http://worker-pool-service.default.svc.cluster.local:8080/metrics"
+      valueLocation: "worker_pool_queue_length" # Metric name (see code in kuberhandlers.go)
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 15  # Stability window before scaling down
+          policies:
+          - type: Percent
+            value: 50                     # Remove to 50% of current replicas at once
+            periodSeconds: 10             # Time window for scale-down operations
+        scaleUp:
+          stabilizationWindowSeconds: 0   # Scale up immediately
+          policies:
+          - type: Percent
+            value: 100                    # Add to 100% of current replicas at once
+            periodSeconds: 10             # Time window for scale-up operations

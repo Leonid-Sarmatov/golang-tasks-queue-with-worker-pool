@@ -129,3 +129,8 @@ cat out.txt | grep "failed" | wc -l # Failed tasks
 ```bash
 echo "Total tasks processed: $(cat out.txt | wc -l)"
 ```
+## Deploy with kubernetes
+### Build application in docker container
+```bash
+docker build -t worker-pool:latest -f ./deploy/Dockerfile .
+```

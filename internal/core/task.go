@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"log"
+	//"log"
 	"math/rand"
 	"strconv"
 	"time"
@@ -44,7 +44,7 @@ func (t *Task) Execute(resultChan chan string) {
 	t.State = TaskStatusRunning
 	// Инкрементируем счетчик попыток решить задачу
 	t.CurrentRetries += 1
-	log.Printf("<task.go> task with ID=%v running, reties=%d (max %d)", t.ID, t.CurrentRetries, t.MaxRetries)
+	//log.Printf("<task.go> task with ID=%v running, reties=%d (max %d)", t.ID, t.CurrentRetries, t.MaxRetries)
 
 	// Задача может выполняться 100, 200, 300, 400 или 500 мс, в зависимости от рандомайзера
 	for range 5 {
@@ -55,7 +55,7 @@ func (t *Task) Execute(resultChan chan string) {
 			// Задача упала, меняем статус
 			t.State = TaskStatusFailed
 			resultChan <- t.State
-			log.Printf("<task.go> task with ID=%v failed", t.ID)
+			//log.Printf("<task.go> task with ID=%v failed", t.ID)
 			return
 		}
 		// Реашем: задача завершилась, или еще потянем время
@@ -67,7 +67,7 @@ func (t *Task) Execute(resultChan chan string) {
 	// Завершаем задачу
 	t.State = TaskStatusDone
 	resultChan <- t.State
-	log.Printf("<task.go> task with ID=%v done", t.ID)
+	//log.Printf("<task.go> task with ID=%v done", t.ID)
 
 	// Запись в стандартный вывод для аккумуляции завершенных задач в файл (go run main.go > out.txt)
 	if val, err := strconv.Atoi(t.ID); err == nil {

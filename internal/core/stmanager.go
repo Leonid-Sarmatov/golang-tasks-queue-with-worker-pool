@@ -17,6 +17,13 @@ func NewTaskStateManager() *TaskStateManager {
 	}
 }
 
+func (tm *TaskStateManager) GetTaslListSize() int {
+	tm.mu.Lock()
+	defer tm.mu.Unlock()
+
+	return len(tm.tasksList)
+}
+
 func (tm *TaskStateManager) AddTask(task *Task) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
