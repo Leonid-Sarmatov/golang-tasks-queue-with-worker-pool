@@ -135,7 +135,7 @@ You can use this script for install Minikube and necessary dependences
 ```bash
 sh ./deploy/minikube_install.sh
 ```
-To deploy the application, you need to build thr Docker image and load it into minikube. The `run.sh` script will do this automatically
+To deploy the application, you need to build the Docker image and load it into minikube. The `run.sh` script will do this automatically
 ```bash
 sh ./deploy/run.sh
 ```
