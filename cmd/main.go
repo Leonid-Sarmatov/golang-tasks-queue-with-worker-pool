@@ -1,18 +1,27 @@
 package main
 
 import (
-	//"context"
-	//"fmt"
-	"worker_pool/internal/core"
-	"worker_pool/internal/server"
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+
+	"worker_pool/internal/core"
+	"worker_pool/internal/server"
 )
 
 func main() {
+	// Graceful Shutdown via NotifyContext
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,    // Ctrl+C
+		syscall.SIGTERM, // docker / k8s
+		syscall.SIGQUIT, // debug stack dump
+	)
+	defer stop()
+
 	// Чтение дополнительных переменных окружения
 	TaskProbabilityFailedEnvRead()
 	TaskWorkImitationEnvRead()
@@ -39,8 +48,8 @@ func main() {
 	signal.Notify(osSignalsChan, os.Interrupt, syscall.SIGTERM)
 
 	// Ждем сигнал об остановке
-	<-osSignalsChan
-	log.Printf("A SIGINT or SIGTERM signal is received, and the application will be stopped...")
+	<-ctx.Done()
+	log.Printf("Received termination signal, the application will be stopped...")
 
 	// Сигнал для kubernetes о скором отклбчении приложения и остановка воркеров
 	ka.SetStateNotReady()

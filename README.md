@@ -17,16 +17,25 @@ You can use this scrips for testing that: `tests/bashtests/add_one_task.sh`
 The queue is implemented using a channel with a capacity set by the `QUEUE_SIZE` environment variable
 ### Worker pool and graceful shutdown triggered by OS signals
 ```go
+// Handling the termination signals
+ctx, stop := signal.NotifyContext(
+	context.Background(),
+	os.Interrupt,    // Ctrl+C
+	syscall.SIGTERM, // docker / k8s
+	syscall.SIGQUIT, // debug stack dump
+)
+defer stop()
+
+// ...
+
 // Pool initialization
 wp := core.NewWorkerPool(QueueSizeEnvRead(), WorkersNumEnvRead(), tsm)
 wp.Run()
 
-// Handling the termination signals
-osSignalsChan := make(chan os.Signal, 1)
-signal.Notify(osSignalsChan, os.Interrupt, syscall.SIGTERM)
-<-osSignalsChan
+// ...
 
-log.Printf("Received termination signal, stopping gracefully...")
+<-ctx.Done()
+log.Printf("Received termination signal, the application will be stopped...")
 wp.Stop() // Stops accepting new tasks and waits for current tasks to complete
 ```
 ### CPU intensive task emulation
