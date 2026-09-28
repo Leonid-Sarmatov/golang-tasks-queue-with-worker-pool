@@ -19,7 +19,7 @@ var (
 type WorkerPool struct {
 	TaskQueue        chan *Task
 	WorkersNum       int
-	WorckerLocker    chan struct{}
+	WorkerLocker     chan struct{}
 	Shutdown         chan struct{}
 	wg               sync.WaitGroup
 	taskStateManager *TaskStateManager
@@ -35,7 +35,7 @@ func NewWorkerPool(qsize, wn int, tsm *TaskStateManager) *WorkerPool {
 	wp.Shutdown = make(chan struct{}, wn)
 
 	// канал контроля заполнения воркеров
-	wp.WorckerLocker = make(chan struct{}, wn)
+	wp.WorkerLocker = make(chan struct{}, wn)
 
 	// Создание группы для ожидания завершения всех горутин
 	wp.wg = sync.WaitGroup{}
@@ -68,7 +68,7 @@ func (wp *WorkerPool) Run() {
 		// При закрытии канала, обрабатываем оставшиеся задачи
 		for inputTask := range wp.TaskQueue {
 			// Если все воркеры заняты, мы заблокируемся до освобождения хотя бы одного
-			wp.WorckerLocker <- struct{}{}
+			wp.WorkerLocker <- struct{}{}
 			//log.Printf("<worckerpool.go> received the task from the queue, ID=%v", inputTask.ID)
 			// запуск логики процесса обработки задачи
 			wp.taskProcess(inputTask)
@@ -88,7 +88,7 @@ func (wp *WorkerPool) taskProcess(task *Task) {
 		defer wp.wg.Done()
 		// По завершению освобождаем воркер
 		defer func() {
-			<-wp.WorckerLocker
+			<-wp.WorkerLocker
 		}()
 		// По завершению удаляем задачу из списка обрабатываемых задач
 		defer wp.taskStateManager.RemoveTask(task)
@@ -141,5 +141,5 @@ func (wp *WorkerPool) Stop() {
 	wp.wg.Wait()
 	log.Printf("<worckerpool.go> all running tasks was done, the worker pool will be shutdown")
 	// Закрываем канал счетчика(блокировщика) количества доступных воркеров
-	close(wp.WorckerLocker)
+	close(wp.WorkerLocker)
 }
