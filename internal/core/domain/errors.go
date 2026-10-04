@@ -12,4 +12,11 @@ var (
 	ErrInvalidId            = errors.New("ID cannot be empty")
 
 	ErrUnknownTaskStateType = errors.New("unknown task state type")
+
+	ErrStateMachine = errors.New("invalid transition in the state machine")
+
+	ErrTaskNotFound      = errors.New("task with this ID not exists")
+	ErrTaskAlreadyExists = errors.New("task with this ID already exists")
+	ErrTaskExecuteFail   = errors.New("failed to execute task")
+	ErrRetriesOwerflow   = errors.New("retries owerflow")
 )
