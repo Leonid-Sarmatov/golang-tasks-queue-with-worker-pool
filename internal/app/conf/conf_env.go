@@ -46,6 +46,22 @@ func NewConfEnv() *ConfEnv {
 	return &cfg
 }
 
+func (cfg *ConfEnv) GetWorkersNumber() domain.WorkersNumber {
+	return cfg.WorkersNum
+}
+
+func (cfg *ConfEnv) GetTaskQueueSize() domain.TaskQueueSize {
+	return cfg.TaskQueueSize
+}
+
+func (cfg *ConfEnv) GetTaskProbabilityFailed() domain.Probability {
+	return cfg.TaskProbabilityFailed
+}
+
+func (cfg *ConfEnv) GetTaskProcessingDuration() time.Duration {
+	return cfg.TaskProcessingDuration
+}
+
 func parseString(envKey string, defaultString string) string {
 	val := os.Getenv(envKey)
 	if val == "" {
