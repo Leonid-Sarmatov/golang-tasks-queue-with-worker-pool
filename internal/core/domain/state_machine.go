@@ -24,6 +24,22 @@ func ExecuteTask(task Task) (Task, error) {
 	return task, nil
 }
 
+func DoneTask(task Task) (Task, error) {
+	// No-op if task is already вщту
+	if task.State == TaskStateTypeDone {
+		return task, nil
+	}
+
+	if task.State != TaskStateTypeRunning {
+		return task, ErrStateMachine
+	}
+
+	// Change state
+	task.State = TaskStateTypeDone
+
+	return task, nil
+}
+
 func FailTask(task Task) (Task, error) {
 	// No-op if task is already failed
 	if task.State == TaskStateTypeFailed {
@@ -48,6 +64,11 @@ func TaskToQueue(task Task) (Task, error) {
 
 	if task.State != TaskStateTypeCreated && task.State != TaskStateTypeFailed {
 		return task, ErrStateMachine
+	}
+
+	// Check retries counter
+	if task.MaxRetries <= task.CurrentRetries {
+		return task, ErrRetriesOwerflow
 	}
 
 	// Change state
