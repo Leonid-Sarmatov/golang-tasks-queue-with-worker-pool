@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+
 	"worker_pool/internal/core/domain"
 )
 
@@ -13,6 +14,11 @@ const (
 	EnvKeyTaskQueueSize          = "TASK_QUEUE_SIZE"
 	EnvKeyTaskProbabilityFailed  = "TASK_PROBABILITY_FAILED"
 	EnvKeyTaskProcessingDuration = "TASK_PROCESSING_DURATION"
+
+	EnvKeyHttpPort            = "HTTP_PORT"
+	EnvKeyHttpReadTimeout     = "HTTP_READ_TIMEOUT"
+	EnvKeyHttpWriteTimeout    = "HTTP_WRITE_TIMEOUT"
+	EnvKeyHttpShutdownTimeout = "HTTP_SHUTDOWN_TIMEOUT"
 )
 
 var DefaultValWorkersNum domain.WorkersNumber = 4
@@ -20,19 +26,35 @@ var DefaultValTaskQueueSize domain.TaskQueueSize = 8
 var DefaultValTaskProbabilityFailed domain.Probability = 20
 var DefaultValTaskProcessingDuration time.Duration = 1 * time.Second
 
+var DefaultHttpPort string = ":8080"
+var DefaultHttpReadTimeout time.Duration = 1 * time.Second
+var DefaultHttpWriteTimeout time.Duration = 1 * time.Second
+var DefaultHttpShutdownTimeout time.Duration = 5 * time.Second
+
 type ConfEnv struct {
 	WorkersNum             domain.WorkersNumber
 	TaskQueueSize          domain.TaskQueueSize
 	TaskProbabilityFailed  domain.Probability
 	TaskProcessingDuration time.Duration
+
+	HttpPort            string
+	HttpReadTimeout     time.Duration
+	HttpWriteTimeout    time.Duration
+	HttpShutdownTimeout time.Duration
 }
 
-func NewConfEnv() *ConfEnv {
+func NewConfEnv() IConfig {
 	var cfg ConfEnv
 
 	cfg.WorkersNum = domain.WorkersNumber(parseInt(EnvKeyWorkersNum, int(DefaultValWorkersNum)))
 	cfg.TaskQueueSize = domain.TaskQueueSize(parseInt(EnvKeyTaskQueueSize, int(DefaultValTaskQueueSize)))
 	cfg.TaskProbabilityFailed = domain.Probability(parseInt(EnvKeyTaskProbabilityFailed, int(DefaultValTaskProbabilityFailed)))
+	cfg.TaskProcessingDuration = parseTimeDuration(EnvKeyTaskProcessingDuration, DefaultValTaskProcessingDuration)
+
+	cfg.HttpPort = parseString(EnvKeyHttpPort, DefaultHttpPort)
+	cfg.HttpReadTimeout = parseTimeDuration(EnvKeyHttpReadTimeout, DefaultHttpReadTimeout)
+	cfg.HttpWriteTimeout = parseTimeDuration(EnvKeyHttpWriteTimeout, DefaultHttpWriteTimeout)
+	cfg.HttpShutdownTimeout = parseTimeDuration(EnvKeyHttpShutdownTimeout, DefaultHttpShutdownTimeout)
 
 	switch {
 	case !domain.IsWorkersNumberValid(cfg.WorkersNum):
@@ -60,6 +82,22 @@ func (cfg *ConfEnv) GetTaskProbabilityFailed() domain.Probability {
 
 func (cfg *ConfEnv) GetTaskProcessingDuration() time.Duration {
 	return cfg.TaskProcessingDuration
+}
+
+func (cfg *ConfEnv) GetHttpPort() string {
+	return cfg.HttpPort
+}
+
+func (cfg *ConfEnv) GetHttpReadTimeout() time.Duration {
+	return cfg.HttpReadTimeout
+}
+
+func (cfg *ConfEnv) GetHttpWriteTimeout() time.Duration {
+	return cfg.HttpWriteTimeout
+}
+
+func (cfg *ConfEnv) GetHttpShutdownTimeout() time.Duration {
+	return cfg.HttpShutdownTimeout
 }
 
 func parseString(envKey string, defaultString string) string {

@@ -11,4 +11,9 @@ type IConfig interface {
 	GetTaskQueueSize() domain.TaskQueueSize
 	GetTaskProbabilityFailed() domain.Probability
 	GetTaskProcessingDuration() time.Duration
+
+	GetHttpPort() string
+	GetHttpReadTimeout() time.Duration
+	GetHttpWriteTimeout() time.Duration
+	GetHttpShutdownTimeout() time.Duration
 }
