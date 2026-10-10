@@ -1,7 +1,7 @@
 package domain
 
 func IsAttemptValid(a Attempt) bool {
-	return 0 <= a
+	return 0 < a
 }
 
 func IsWorkersNumberValid(wn WorkersNumber) bool {

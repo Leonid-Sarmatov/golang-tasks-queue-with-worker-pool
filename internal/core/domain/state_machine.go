@@ -10,13 +10,13 @@ func ExecuteTask(task Task) (Task, error) {
 		return task, ErrStateMachine
 	}
 
-	// Check retries counter
-	if task.MaxRetries <= task.CurrentRetries {
+	// Check attempt counter
+	if task.MaxAttempts <= task.CurrentAttempt {
 		return task, ErrRetriesOwerflow
 	}
 
-	// Increment retries counter
-	task.CurrentRetries += 1
+	// Increment attempt counter
+	task.CurrentAttempt += 1
 
 	// Change state
 	task.State = TaskStateTypeRunning
@@ -66,8 +66,8 @@ func TaskToQueue(task Task) (Task, error) {
 		return task, ErrStateMachine
 	}
 
-	// Check retries counter
-	if task.MaxRetries <= task.CurrentRetries {
+	// Check attempt counter
+	if task.MaxAttempts <= task.CurrentAttempt {
 		return task, ErrRetriesOwerflow
 	}
 

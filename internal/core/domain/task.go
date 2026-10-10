@@ -3,23 +3,23 @@ package domain
 type Task struct {
 	Id             ID            `json:"id"`
 	Payload        string        `json:"payload"`
-	MaxRetries     Attempt       `json:"max_retries"`
-	CurrentRetries Attempt       `json:"current_retries"`
+	MaxAttempts    Attempt       `json:"max_attempts"`
+	CurrentAttempt Attempt       `json:"current_retries"`
 	State          TaskStateType `json:"state"`
 }
 
-func NewTask(id ID, payload string, maxRetries Attempt) (Task, error) {
+func NewTask(id ID, payload string, MaxAttempts Attempt) (Task, error) {
 	switch {
 	case !IsIdValid(id):
 		return Task{}, ErrInvalidId
-	case !IsAttemptValid(maxRetries):
+	case !IsAttemptValid(MaxAttempts):
 		return Task{}, ErrInvalidAttempt
 	}
 	return Task{
 		Id:             id,
 		Payload:        payload,
-		MaxRetries:     maxRetries,
-		CurrentRetries: 0,
+		MaxAttempts:    MaxAttempts,
+		CurrentAttempt: 0,
 		State:          TaskStateTypeCreated,
 	}, nil
 }
@@ -28,8 +28,8 @@ func MakeTaskCopy(t Task) Task {
 	return Task{
 		Id:             t.Id,
 		Payload:        t.Payload,
-		MaxRetries:     t.MaxRetries,
-		CurrentRetries: t.CurrentRetries,
+		MaxAttempts:    t.MaxAttempts,
+		CurrentAttempt: t.CurrentAttempt,
 		State:          t.State,
 	}
 }
