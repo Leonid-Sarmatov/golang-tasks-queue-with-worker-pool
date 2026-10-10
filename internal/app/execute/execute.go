@@ -11,7 +11,7 @@ import (
 
 func Execute(task domain.Task, cfg conf.IConfig) (domain.Task, error) {
 
-	time.Sleep(time.Duration(cfg.GetTaskProcessingDuration()))
+	time.Sleep(cfg.GetTaskProcessingDuration())
 
 	if Randomizer(cfg.GetTaskProbabilityFailed()) {
 		return task, domain.ErrTaskExecuteFail
