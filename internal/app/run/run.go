@@ -50,11 +50,19 @@ func Run() {
 		handlers.MakeHandler_KuberMetrics(wp))
 	server.Init()
 
-	// Waiting termination signals
+	// Mark the application as ready
+	ka.SetStateReadyOK()
+
+	// Wait for termination signals
 	<-ctx.Done()
 	log.Printf("Received termination signal, the application will be stopped...")
 
+	// Mark the application as not ready
+	ka.SetStateNotReady()
+
+	// Stop HTTP server
 	server.Stop()
 
+	// Wait for workers and goroutines to exit
 	wp.Stop()
 }
