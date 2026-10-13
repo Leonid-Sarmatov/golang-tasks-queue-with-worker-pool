@@ -15,7 +15,7 @@ const maxBodySize int64 = 64 * 1024
 type AddTaskRequest struct {
 	ID          string `json:"id"`
 	Payload     string `json:"payload"`
-	MaxAttempts int32  `json:"max_retries"`
+	MaxAttempts int32  `json:"max_attempts"`
 }
 
 func MakeHandler_AddTask(wp *workerpool.WorkerPool) http.HandlerFunc {
