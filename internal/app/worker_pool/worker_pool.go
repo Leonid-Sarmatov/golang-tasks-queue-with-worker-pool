@@ -8,8 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"worker_pool/internal/app/conf"
-	"worker_pool/internal/app/execute"
 	"worker_pool/internal/core/domain"
 )
 
@@ -20,16 +18,17 @@ var (
 type WorkerPool struct {
 	ctxShutdown context.Context
 	workersNum  domain.WorkersNumber
+	exec        domain.Executor
 	queue       chan domain.Task
 	semaphore   chan struct{}
 	wg          sync.WaitGroup
-	cfg         conf.IConfig
 }
 
 func NewWorkerPool(
 	ctxShutdown context.Context,
 	workersNum domain.WorkersNumber,
 	queueSize domain.TaskQueueSize,
+	exec domain.Executor,
 ) *WorkerPool {
 	var wp WorkerPool
 
@@ -37,6 +36,7 @@ func NewWorkerPool(
 
 	wp.workersNum = workersNum
 	wp.queue = make(chan domain.Task, queueSize)
+	wp.exec = exec
 
 	wp.wg = sync.WaitGroup{}
 
@@ -115,7 +115,7 @@ func (wp *WorkerPool) processor(t domain.Task) {
 		}
 
 		// Execute task
-		t, errExec := execute.Execute(t, wp.cfg)
+		t, errExec := wp.exec(t)
 		if errExec != nil {
 			// Transition task to fail state if execution failed
 			t, err = domain.FailTask(t)
