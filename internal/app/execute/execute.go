@@ -5,21 +5,24 @@ import (
 	"math/rand/v2"
 	"time"
 
-	"worker_pool/internal/app/conf"
 	"worker_pool/internal/core/domain"
 )
 
-func Execute(task domain.Task, cfg conf.IConfig) (domain.Task, error) {
+func MakeExecutor(
+	processingDuration time.Duration,
+	probabilityFailed domain.Probability,
+) domain.Executor {
+	return func(task domain.Task) (domain.Task, error) {
+		time.Sleep(processingDuration)
 
-	time.Sleep(cfg.GetTaskProcessingDuration())
+		if Randomizer(probabilityFailed) {
+			return task, domain.ErrTaskExecuteFail
+		}
 
-	if Randomizer(cfg.GetTaskProbabilityFailed()) {
-		return task, domain.ErrTaskExecuteFail
+		fmt.Printf("task with ID=%s done\n", task.Id)
+
+		return task, nil
 	}
-
-	fmt.Printf("task with ID=%s done\n", task.Id)
-
-	return task, nil
 }
 
 func Randomizer(probability domain.Probability) bool {
