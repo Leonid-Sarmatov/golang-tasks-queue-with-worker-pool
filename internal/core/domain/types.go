@@ -19,3 +19,5 @@ const (
 	TaskStateTypeDone
 	TaskStateTypeFailed
 )
+
+type Executor func(Task) (Task, error)
