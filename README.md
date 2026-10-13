@@ -1,20 +1,28 @@
-# Tasks queue with worker pool and exponential backoff strategy
+# Task queue with a worker pool and exponential backoff strategy
+
 ## Architecture
+
 ### HTTP Server and task reception
-The application launches an HTTP server with endpoint for task submission:
+The application launches an HTTP server with an endpoint for task submission:
 ```go
 mux.HandleFunc("/enqueue", GetAddTaskHandler(wp))
 ```
 **JSON format for new tasks**
 ```json
 {
-	"id": "123",
+	"id":          "123",
+    "payload":     "any text",
 	"max_retries": 3
 }
 ```
-You can use this scrips for testing that: `tests/bashtests/add_one_task.sh`
+Use this scrips to test task submission:
+```bash
+sh ./tests/bashtests/add_one_task.sh 
+```
+
 ### Buffered task queue
-The queue is implemented using a channel with a capacity set by the `QUEUE_SIZE` environment variable
+The queue is implemented using a channel with a capacity set by the `TASK_QUEUE_SIZE` environment variable.
+
 ### Worker pool and graceful shutdown triggered by OS signals
 ```go
 // Handling the termination signals
@@ -29,131 +37,143 @@ defer stop()
 // ...
 
 // Pool initialization
-wp := core.NewWorkerPool(QueueSizeEnvRead(), WorkersNumEnvRead(), tsm)
+wp := workerpool.NewWorkerPool(
+    ctx,
+    cfg.GetWorkersNumber(),
+    cfg.GetTaskQueueSize(),
+    execute_func)
 wp.Run()
 
 // ...
 
 <-ctx.Done()
 log.Printf("Received termination signal, the application will be stopped...")
+
 wp.Stop() // Stops accepting new tasks and waits for current tasks to complete
 ```
-### CPU intensive task emulation
+
+### Task processing simulation
 ```go
-for range 5 {
-	time.Sleep(TASK_WORK_IMITATION_DURATION * time.Millisecond)
-	if Radomizer(TASK_PROBABILITY_FAILED) {
-		t.State = TaskStatusFailed
-		resultChan <- t.State
-		log.Printf("Task ID=%v failed", t.ID)
-		return
-	}
-	if Radomizer(50) { // 50% chance to complete early
-		break
-	}
+time.Sleep(processingDuration)
+
+if Randomizer(probabilityFailed) {
+    return task, domain.ErrTaskExecuteFail
 }
 
-t.State = TaskStatusDone
-resultChan <- t.State
+fmt.Printf("task with ID=%s done\n", task.Id)
+
+return task, nil
 ```
+
 ### Retry strategy with exponential Backoff and Jitter
 ```go
-// Exponential backoff: 2^retries seconds
-baseDelay := time.Duration(1<<uint(task.CurrentRetries)) * time.Second
+// Calculate exponential backoff delay (2^retries seconds)
+x := time.Duration(1<<uint(t.CurrentAttempt)) * time.Second
 
-// Adding Jitter: ±500 ms
-jitter := time.Duration(rand.Intn(1000)-500) * time.Millisecond
-totalDelay := baseDelay + jitter
-
-log.Printf("Task ID=%s scheduled for retry in %v", task.ID, totalDelay)
-time.Sleep(totalDelay)
-wp.AddTastToQueue(task)
+// Add random jitter to delay to spread retries (±500 ms)
+x += time.Duration(rand.Intn(1000)-500) * time.Millisecond
 ```
 **Retry limit:**
 ```go
-if task.CurrentRetries >= task.MaxRetries {
-	log.Printf("Task ID=%s exceeded max retries (%d)", task.ID, task.CurrentRetries)
-	// Output fails to stdout for statistics collection
-	fmt.Printf("task with ID=%04d failed\n", task.ID)
-	return
+func ExecuteTask(task Task) (Task, error) {
+	// No-op if task is already running
+	if task.State == TaskStateTypeRunning {
+		return task, nil
+	}
+
+	if task.State != TaskStateTypeInQueue {
+		return task, ErrStateMachine
+	}
+
+	// Check attempt counter
+	if task.MaxAttempts <= task.CurrentAttempt {
+		return task, ErrRetriesOwerflow
+	}
+
+	// Increment attempt counter
+	task.CurrentAttempt += 1
+
+	// Change state
+	task.State = TaskStateTypeRunning
+
+	return task, nil
 }
 ```
-### Healthcheck endpoint
-`GET /health` - return 200 OK if the service is alive 
-The testing script for the endpoint: `tests/bashtests/health_check.sh`
+
 ## Usage and configuration
+
 ### Environment variables
 
 | Variable                       | Default value | Description                                           |
 | ------------------------------ | ------------- | ----------------------------------------------------- |
-| `WORKERS`                      | 4             | Number of the workers                                 |
-| `QUEUE_SIZE`                   | 64            | Capacity of the task queue channel                    |
-| `TASK_PROBABILITY_FAILED`      | 25            | Probability of the task failure on each iteration (%) |
-| `TASK_WORK_IMITATION_DURATION` | 100           | Delay between iterations (ms)                         |
+| `WORKERS_NUMBER`               | 4             | Number of the workers                                 |
+| `TASK_QUEUE_SIZE`              | 8             | Capacity of the task queue channel                    |
+| `TASK_PROBABILITY_FAILED`      | 20            | Probability of the task failure per execution attempt (%) |
+| `TASK_PROCESSING_DURATION`     | 1s            | Delay in the execution function                       |
+| `HTTP_PORT`                    | :8080         | Port on which the HTTP server will be launched                      |
+| `HTTP_READ_TIMEOUT`            | 1s            | HTTP read timeout                                     |
+| `HTTP_WRITE_TIMEOUT`           | 1s            | HTTP write timeout                                    |
+| `HTTP_SHUTDOWN_TIMEOUT`        | 1s            | Durarion for graceful shutdown                        |
+
 ### Run application
-**Basic startup:**
+**Basic launching:**
 ```bash
 go run cmd/main.go
 ```
 **With custom configurations:**
 ```bash
-WORKERS="10" QUEUE_SIZE="16" go run cmd/main.go > out.txt
+WORKERS_NUMBER="10" TASK_QUEUE_SIZE="16" go run cmd/main.go > out.txt
 ```
 **With guaranteed failures:**
 ```bash
-WORKERS="10" TASK_PROBABILITY_FAILED="100" go run cmd/main.go > out.txt
+WORKERS_NUMBER="10" TASK_PROCESSING_DURATION="100" go run cmd/main.go > out.txt
 ```
-## Testing and monitoring
-### High load testing 
-```bash
-sh ./tests/bashtests/high_load_test.sh --host=localhost --port=8080 --requests-numbers=100 # Sending 100 parallel requests
-```
-### Task status check
-```bash
-go run cmd/taskstatuscheck.go
-```
-**Output:**
-```
-Task 1: ID: 26 MaxRetries: 3 CurrentRetries: 1 State: running
-Task 2: ID: 4 MaxRetries: 3 CurrentRetries: 1 State: failed
-Task 3: ID: 6 MaxRetries: 3 CurrentRetries: 1 State: done
 
-...
-```
-### Result analysis
-**Execution statistic:**
-```bash
-cat out.txt | sort
-# Output:
-task with ID=0001 done
-task with ID=0002 failed
-task with ID=0003 done
-...
-
-# Counting results:
-cat out.txt | grep "done" | wc -l   # Successful tasks
-cat out.txt | grep "failed" | wc -l # Failed tasks
-```
-**Validation of all tasks processed:**
-```bash
-echo "Total tasks processed: $(cat out.txt | wc -l)"
-```
 ## Deploy with Minikube
+
 ### Minikube installation
-You can use this script for install Minikube and necessary dependences
+Use this sript to install Minikube and required dependences.
 ```bash
 sh ./deploy/minikube_install.sh
 ```
-To deploy the application, you need to build the Docker image and load it into minikube. The `run.sh` script will do this automatically
+To deploy the application, you need to build the Docker image and load it into Minikube. The `run.sh` script will do this automatically.
 ```bash
 sh ./deploy/run.sh
 ```
-### Check application pods
-Monitor pod states in real-time and check their count
+
+### Observe pod autoscaling
+Monitor pod states and check their count in real time:
 ```sh
 watch -n 1 "echo '=== PODS ==='; kubectl get pods -l app=worker-pool; echo ''; echo '=== HPA ==='; kubectl get hpa"
 ```
-If you want to observe pods scaling, use command above and simultaneously run high-load test
+If you want to observe pods scaling, run the command above and run the high-load test in another terminal:
 ```bash
-sh ./tests/bashtests/high_load_test.sh --host=<node-ip> --port=30080 --requests-numbers=200
+sh ./tests/bashtests/high_load_test.sh --port=30080 --requests-numbers=200
+```
+
+### Check graceful shutdown logs
+Open log messages stream from all pods with command:
+```bash
+kubectl logs -n default -l app=worker-pool --all-containers=true --prefix=true --timestamps=true --tail=50 --max-log-requests=10 -f
+```
+Next you should delete any pod using the command:
+```bash
+kubectl delete pod <pod-name> --wait=false 
+```
+You can find pod names via:
+```bash
+kubectl get pods
+```
+
+## Testing and monitoring
+
+### Health check
+`GET /health` - return 200 OK if the service is alive. The the endpoint with:
+```bash
+sh ./tests/bashtests/health_check.sh 
+```
+
+### High-load testing 
+```bash
+sh ./tests/bashtests/high_load_test.sh --port=8080 --requests-numbers=100 # Sending 100 parallel requests
 ```
