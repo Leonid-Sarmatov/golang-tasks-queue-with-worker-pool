@@ -2,12 +2,13 @@ package run
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"worker_pool/internal/app/conf"
+	"worker_pool/internal/app/execute"
 	"worker_pool/internal/app/handlers"
 	"worker_pool/internal/app/kuber"
 
@@ -28,6 +29,11 @@ func Run() {
 	// Upload configurations
 	cfg := conf.NewConfEnv()
 
+	// Create task executor
+	execute_func := execute.MakeExecutor(
+		cfg.GetTaskProcessingDuration(),
+		cfg.GetTaskProbabilityFailed())
+
 	// Create kubernetes adapter
 	ka := kuber.NewKubernetesAdapter()
 
@@ -35,7 +41,8 @@ func Run() {
 	wp := workerpool.NewWorkerPool(
 		ctx,
 		cfg.GetWorkersNumber(),
-		cfg.GetTaskQueueSize())
+		cfg.GetTaskQueueSize(),
+		execute_func)
 	wp.Run()
 
 	// Create and start HTTP server
@@ -55,7 +62,7 @@ func Run() {
 
 	// Wait for termination signals
 	<-ctx.Done()
-	log.Printf("Received termination signal, the application will be stopped...")
+	fmt.Printf("Received termination signal, the application will be stopped...\n")
 
 	// Mark the application as not ready
 	ka.SetStateNotReady()
