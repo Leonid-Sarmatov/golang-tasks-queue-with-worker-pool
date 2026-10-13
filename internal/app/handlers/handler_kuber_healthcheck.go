@@ -13,7 +13,7 @@ type KuberHealthcheckOutput struct {
 
 func MakeHandler_KuberHealthcheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("[KuberHealthcheck]")
+		fmt.Printf("[KuberHealthcheck]\n")
 
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, "I'm alive!")

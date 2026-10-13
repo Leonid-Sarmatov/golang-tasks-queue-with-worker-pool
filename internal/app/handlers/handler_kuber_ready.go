@@ -9,7 +9,7 @@ import (
 
 func MakeHandler_KuberReady(ka *kuber.KubernetesAdapter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("[KuberReady]")
+		fmt.Printf("[KuberReady]\n")
 
 		if ka.IsApplicationReady() {
 			w.WriteHeader(http.StatusOK)
