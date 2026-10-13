@@ -10,7 +10,13 @@ else
 fi
 
 echo
-echo "[2] Loading docker image into minikube..."
+echo "[2] Deleting kubernetes manifests (if it was launched previously)..."
+echo
+
+kubectl delete -f deploy/
+
+echo
+echo "[3] Loading docker image into minikube..."
 echo
 
 if ! minikube image load worker-pool:latest ; then
@@ -21,7 +27,7 @@ else
 fi
 
 echo
-echo "[3] Applying kubernetes manifests..."
+echo "[4] Applying kubernetes manifests..."
 echo
 
 if ! kubectl apply -f ./deploy/; then

@@ -15,16 +15,16 @@ spec:
       containers:
       - name: worker-pool             # Container name in the pod
         image: worker-pool:latest     # Name of the app's docker-image 
-        imagePullPolicy: IfNotPresent # Use the local image if available
+        imagePullPolicy: Never        # Use the local image if available
         ports:
         - containerPort: 8080
         env:            # Environments variables
-        - name: WORKERS
-          value: "4"
-        - name: QUEUE_SIZE
-          value: "64"
-        - name: TASK_WORK_IMITATION_DURATION
-          value: "500"
+        - name: WORKERS_NUMBER
+          value: "8"
+        - name: TASK_QUEUE_SIZE
+          value: "8"
+        - name: TASK_PROBABILITY_FAILED
+          value: "90"
         readinessProbe: # Readiness check for traffic acceptance
           httpGet:
             path: /ready
