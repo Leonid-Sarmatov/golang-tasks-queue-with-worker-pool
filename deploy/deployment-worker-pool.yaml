@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: worker-pool
+  namespace: apps
 spec:
   replicas: 1 # Initial number of replicas
   selector:
@@ -13,11 +14,13 @@ spec:
         app: worker-pool
     spec:
       containers:
-      - name: worker-pool             # Container name in the pod
+      - name: worker-pool-container   # Container name in the pod
         image: worker-pool:latest     # Name of the app's docker-image 
         imagePullPolicy: Never        # Use the local image if available
+
         ports:
         - containerPort: 8080
+
         env:            # Environments variables
         - name: WORKERS_NUMBER
           value: "8"
@@ -25,18 +28,21 @@ spec:
           value: "8"
         - name: TASK_PROBABILITY_FAILED
           value: "90"
+
         readinessProbe: # Readiness check for traffic acceptance
           httpGet:
             path: /ready
             port: 8080
           initialDelaySeconds: 2
           periodSeconds: 7
+
         livenessProbe:  # Container liveness check
           httpGet:
             path: /health
             port: 8080
           initialDelaySeconds: 10
           periodSeconds: 9
+
         resources:
           requests:
             cpu: "100m"     # Guaranteed 0.1 CPU
@@ -44,4 +50,5 @@ spec:
           limits:
             cpu: "500m"     # Maximum 0.5 CPU  
             memory: "512Mi" # Maximum 512 MB memory
+            
       terminationGracePeriodSeconds: 80
