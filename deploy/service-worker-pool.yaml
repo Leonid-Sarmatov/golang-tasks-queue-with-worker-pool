@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: worker-pool-service
+  namespace: apps
 spec:
   selector:
     app: worker-pool
