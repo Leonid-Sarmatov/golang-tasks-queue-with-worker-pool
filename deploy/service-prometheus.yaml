@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: monitoring
+spec:
+  selector:
+    app: prometheus
+  ports:
+  - protocol: TCP
+    port: 9090        # Service port inside the cluster
+    targetPort: 9090  # The containter port
+    nodePort: 30081   # External access port on nodes
+  type: NodePort      # Service type for the external access

@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1 # Initial number of replicas
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus-container          # Container name in the pod
+        image: prom/prometheus:latest  # Name of the app's docker-image 
+        imagePullPolicy: IfNotPresent
+        args:
+          - --config.file=/etc/prometheus/prometheus.yml
+          - --storage.tsdb.path=/prometheus
+          - --storage.tsdb.retention.time=6h
+
+        ports:
+        - containerPort: 9090
+
+        readinessProbe: # Readiness check for traffic acceptance
+          httpGet:
+            path: /-/ready
+            port: 9090
+          initialDelaySeconds: 2
+          periodSeconds: 7
+
+        livenessProbe:  # Container liveness check
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          initialDelaySeconds: 10
+          periodSeconds: 9
+
+        resources:
+          requests:
+            cpu: "100m"     # Guaranteed 0.1 CPU
+            memory: "256Mi" # Guaranteed 256 MB memory
+
+          limits:
+            cpu: "500m"      # Maximum 0.5 CPU  
+            memory: "1024Mi" # Maximum 1024 MB memory
+
+        volumeMounts:
+          - name: config
+            mountPath: /etc/prometheus
+            readOnly: true
+          - name: data
+            mountPath: /prometheus
+
+      volumes:  # Use config map (configmap-prometheus.yaml)
+      - name: config
+        configMap:
+          name: prometheus-config
+      - name: data
+        emptyDir: {}
+
+      terminationGracePeriodSeconds: 80
