@@ -18,7 +18,7 @@ spec:
     metadata:
       targetValue: "1"   # Target metric value per pod (queue load)
       url: "http://worker-pool-service.default.svc.cluster.local:8080/metrics"
-      valueLocation: "worker_pool_queue_length" # Metric name (see code in kuberhandlers.go)
+      valueLocation: "worker_pool_queue_length" # Metric name (see code in internal/app/handlers/handler_kuber_metrics.go)
   advanced:
     horizontalPodAutoscalerConfig:
       behavior:
