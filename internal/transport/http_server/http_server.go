@@ -13,11 +13,14 @@ type httpServer struct {
 	readTimeout     time.Duration
 	writeTimeout    time.Duration
 	shutdownTimeout time.Duration
-	healthHandler   http.HandlerFunc
-	enqueueHandler  http.HandlerFunc
-	readyHandler    http.HandlerFunc
-	metricsHandler  http.HandlerFunc
-	server          http.Server
+
+	healthHandler            http.HandlerFunc
+	enqueueHandler           http.HandlerFunc
+	readyHandler             http.HandlerFunc
+	metricsHandler           http.HandlerFunc
+	prometheusMetricsHandler http.HandlerFunc
+
+	server http.Server
 }
 
 func NewServer(
@@ -25,20 +28,23 @@ func NewServer(
 	readTimeout time.Duration,
 	writeTimeout time.Duration,
 	shutdownTimeout time.Duration,
+
 	healthHandler http.HandlerFunc,
 	enqueueHandler http.HandlerFunc,
 	readyHandler http.HandlerFunc,
 	metricsHandler http.HandlerFunc,
+	prometheusMetricsHandler http.HandlerFunc,
 ) *httpServer {
 	return &httpServer{
-		port:            port,
-		readTimeout:     readTimeout,
-		writeTimeout:    writeTimeout,
-		shutdownTimeout: shutdownTimeout,
-		healthHandler:   healthHandler,
-		enqueueHandler:  enqueueHandler,
-		readyHandler:    readyHandler,
-		metricsHandler:  metricsHandler,
+		port:                     port,
+		readTimeout:              readTimeout,
+		writeTimeout:             writeTimeout,
+		shutdownTimeout:          shutdownTimeout,
+		healthHandler:            healthHandler,
+		enqueueHandler:           enqueueHandler,
+		readyHandler:             readyHandler,
+		metricsHandler:           metricsHandler,
+		prometheusMetricsHandler: prometheusMetricsHandler,
 	}
 }
 
@@ -49,6 +55,7 @@ func (s *httpServer) Init() {
 	mux.HandleFunc("/enqueue", s.enqueueHandler)
 	mux.HandleFunc("/ready", s.readyHandler)
 	mux.HandleFunc("/metrics", s.metricsHandler)
+	mux.HandleFunc("/prometheus-metrics", s.prometheusMetricsHandler)
 
 	s.server = http.Server{
 		Addr:         s.port,
