@@ -54,7 +54,8 @@ func Run() {
 		handlers.MakeHandler_KuberHealthcheck(),
 		handlers.MakeHandler_AddTask(wp),
 		handlers.MakeHandler_KuberReady(ka),
-		handlers.MakeHandler_KuberMetrics(wp))
+		handlers.MakeHandler_KuberMetrics(wp),
+		handlers.MakeHandler_PrometheusMetrics(wp))
 	server.Init()
 
 	// Mark the application as ready
