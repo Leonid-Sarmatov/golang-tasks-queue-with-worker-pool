@@ -22,6 +22,9 @@ for arg in "$@"; do
         --sleep-time=*)
             SLEEP_TIME="${arg#*=}"
             ;;
+        --max-attempts=*)
+            MAX_ATTEMPTS="${arg#*=}"
+            ;;
     esac
 done
 
