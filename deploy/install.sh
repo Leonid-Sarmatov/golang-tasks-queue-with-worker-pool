@@ -22,7 +22,7 @@ if minikube status | grep -q "Running"; then
     echo "✓ Minikube cluster is already running"
 else
     echo "Starting Minikube cluster..."
-    minikube start
+    minikube start -p minikube --driver=docker
     echo "✓ Minikube cluster started"
 fi
 
