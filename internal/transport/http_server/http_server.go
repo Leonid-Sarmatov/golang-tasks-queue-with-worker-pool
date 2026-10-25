@@ -51,11 +51,11 @@ func NewServer(
 func (s *httpServer) Init() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/health", s.healthHandler)
+	mux.HandleFunc("/kubernetes/health", s.healthHandler)
 	mux.HandleFunc("/enqueue", s.enqueueHandler)
-	mux.HandleFunc("/ready", s.readyHandler)
-	mux.HandleFunc("/metrics", s.metricsHandler)
-	mux.HandleFunc("/prometheus-metrics", s.prometheusMetricsHandler)
+	mux.HandleFunc("/kubernetes/ready", s.readyHandler)
+	mux.HandleFunc("/metrics/keda/scaler", s.metricsHandler)
+	mux.HandleFunc("/metrics/prometheus", s.prometheusMetricsHandler)
 
 	s.server = http.Server{
 		Addr:         s.port,
