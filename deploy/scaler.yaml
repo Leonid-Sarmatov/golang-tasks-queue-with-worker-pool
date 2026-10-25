@@ -9,8 +9,8 @@ spec:
     kind: Deployment
     name: worker-pool
   # Autoscaling speed settings
-  cooldownPeriod: 10     # Seconds between scaling changes
-  pollingInterval: 5     # Seconds between metrics checks
+  cooldownPeriod: 2      # Seconds between scaling changes
+  pollingInterval: 1     # Seconds between metrics checks
   # Autoscaling limits 
   minReplicaCount: 1
   maxReplicaCount: 10

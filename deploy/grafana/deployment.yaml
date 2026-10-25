@@ -64,14 +64,32 @@ spec:
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources
               readOnly: true
+
             - name: data
               mountPath: /var/lib/grafana
+
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: true
+
+            - name: dashboards
+              mountPath: /etc/grafana/dashboards
+              readOnly: true
 
       volumes:
         - name: datasources
           configMap:
             name: grafana-datasources
+
         - name: data
           emptyDir: {}
+
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
 
       terminationGracePeriodSeconds: 30

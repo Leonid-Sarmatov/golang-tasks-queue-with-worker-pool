@@ -27,7 +27,9 @@ spec:
         - name: TASK_QUEUE_SIZE
           value: "64"
         - name: TASK_PROBABILITY_FAILED
-          value: "80"
+          value: "50"
+        - name: TASK_PROCESSING_DURATION
+          value: "5s"
 
         readinessProbe: # Readiness check for traffic acceptance
           httpGet:
