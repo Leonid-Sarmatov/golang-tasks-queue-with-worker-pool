@@ -46,6 +46,20 @@ echo
 echo "[5] Applying kubernetes manifests..."
 echo
 
+if ! kubectl apply -f ./deploy/prometheus/ --wait=true --timeout=180s; then
+    echo "Failed to apply manifests!"
+    exit 1
+else
+    echo "✓ Manifests successfully applied - application is now running"
+fi
+
+if ! kubectl apply -f ./deploy/grafana/ --wait=true --timeout=180s; then
+    echo "Failed to apply manifests!"
+    exit 1
+else
+    echo "✓ Manifests successfully applied - application is now running"
+fi
+
 if ! kubectl apply -f ./deploy/ --wait=true --timeout=180s; then
     echo "Failed to apply manifests!"
     exit 1

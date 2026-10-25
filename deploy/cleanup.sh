@@ -11,6 +11,19 @@ else
     echo "✓ Deleting kubernetes manifests successfully"
 fi
 
+if ! kubectl delete -f deploy/prometheus/ --ignore-not-found=true --wait=true --timeout=180s; then
+    echo "failed to delete kubernetes manifests"
+else
+    echo "✓ Deleting kubernetes manifests successfully"
+fi
+
+if ! kubectl delete -f deploy/grafana/ --ignore-not-found=true --wait=true --timeout=180s; then
+    echo "failed to delete kubernetes manifests"
+else
+    echo "✓ Deleting kubernetes manifests successfully"
+fi
+
+
 echo
 echo "[2] Deleting minikube..."
 echo
