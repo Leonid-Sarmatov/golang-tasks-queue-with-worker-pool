@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	ErrQueueIsLocked = errors.New("worker pool has stopped, queue is locked")
+	ErrQueueIsLocked   = errors.New("worker pool has stopped, queue is locked")
+	ErrQueueIsOwerflow = errors.New("worker pool queue is owerflow")
 )
 
 type WorkerPool struct {
@@ -62,6 +63,8 @@ func (wp *WorkerPool) AddTaskToQueue(taskIn domain.Task) error {
 		return ErrQueueIsLocked
 	case wp.queue <- taskOut:
 		return nil
+	default:
+		return ErrQueueIsOwerflow
 	}
 }
 
