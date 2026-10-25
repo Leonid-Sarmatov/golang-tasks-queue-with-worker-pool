@@ -13,6 +13,7 @@ spec:
       labels:
         app: prometheus
     spec:
+      serviceAccountName: prometheus-account
       containers:
       - name: prometheus-container          # Container name in the pod
         image: prom/prometheus:latest  # Name of the app's docker-image 

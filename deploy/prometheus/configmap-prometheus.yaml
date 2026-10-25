@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s
+      scrape_timeout: 5s
+
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets:
+              - localhost:9090
+
+      # - job_name: worker-pool
+      #   scrape_interval: 1s
+      #   metrics_path: /metrics/prometheus
+      #   static_configs:
+      #     - targets:
+      #         - worker-pool-service.apps.svc.cluster.local:8080
+
+      - job_name: worker-pool
+        metrics_path: /metrics/prometheus
+        scrape_interval: 2s
+        scrape_timeout: 1s
+
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - apps
+
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: worker-pool
+
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: "8080"
+
+          - source_labels: [__meta_kubernetes_pod_phase]
+            action: keep
+            regex: Running
+
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
