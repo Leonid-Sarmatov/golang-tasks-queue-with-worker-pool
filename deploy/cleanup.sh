@@ -7,7 +7,6 @@ echo
 
 if ! kubectl delete -f deploy/ --ignore-not-found=true --wait=true --timeout=180s; then
     echo "failed to delete kubernetes manifests"
-    exit 1
 else
     echo "✓ Deleting kubernetes manifests successfully"
 fi
