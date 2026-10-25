@@ -18,7 +18,7 @@ spec:
   - type: metrics-api    # Use custom metrics
     metadata:
       targetValue: "1"   # Target metric value per pod (queue load)
-      url: "http://worker-pool-service.apps.svc.cluster.local:8080/metrics"
+      url: "http://worker-pool-service.apps.svc.cluster.local:8080/metrics/keda/scaler"
       valueLocation: "worker_pool_queue_length" # Metric name (see code in internal/app/handlers/handler_kuber_metrics.go)
   advanced:
     horizontalPodAutoscalerConfig:

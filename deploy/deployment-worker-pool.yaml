@@ -25,20 +25,20 @@ spec:
         - name: WORKERS_NUMBER
           value: "8"
         - name: TASK_QUEUE_SIZE
-          value: "8"
+          value: "64"
         - name: TASK_PROBABILITY_FAILED
-          value: "90"
+          value: "80"
 
         readinessProbe: # Readiness check for traffic acceptance
           httpGet:
-            path: /ready
+            path: /kubernetes/ready
             port: 8080
           initialDelaySeconds: 2
           periodSeconds: 7
 
         livenessProbe:  # Container liveness check
           httpGet:
-            path: /health
+            path: /kubernetes/health
             port: 8080
           initialDelaySeconds: 10
           periodSeconds: 9
